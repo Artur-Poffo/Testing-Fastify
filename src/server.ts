@@ -1,9 +1,11 @@
 import fastify, { FastifyInstance } from "fastify";
-import userRouter from "./routes/userRouter";
+import productsRouter from "./routes/productsRouter";
+import usersRouter from "./routes/userRouter";
 
 const app: FastifyInstance = fastify()
 
-app.register(userRouter, { prefix: '/users' })
+app.register(usersRouter, { prefix: '/users' })
+app.register(productsRouter, { prefix: '/products' })
 
 const start = async () => {
   try {

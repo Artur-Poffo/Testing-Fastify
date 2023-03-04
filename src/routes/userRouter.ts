@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { FastifyInstance, RouteShorthandOptions } from 'fastify';
 import { z } from "zod";
+import IUsersParams from "../interfaces/idRouteParam";
 
 const prisma = new PrismaClient()
 
-const userRouter = async (app: FastifyInstance, options: RouteShorthandOptions) => {
+const usersRouter = async (app: FastifyInstance, options: RouteShorthandOptions) => {
   app.get('/', async (req, reply) => {
     try {
       const users = await prisma.user.findMany()
@@ -12,6 +13,24 @@ const userRouter = async (app: FastifyInstance, options: RouteShorthandOptions) 
       return { users }
     } catch (err) {
       return reply.status(500).send({ success: false, message: "Error on get users list", data: err })
+    }
+  })
+
+  app.get<{ Params: IUsersParams }>('/:id', async (req, reply) => {
+    try {
+      const { id } = req.params
+
+      const searchUser = await prisma.user.findFirst({
+        where: { id: Number(id) },
+      })
+
+      if (searchUser) {
+        return reply.status(200).send({ success: true, message: "User found", data: searchUser })
+      } else {
+        return reply.status(500).send({ success: false, message: "Error on find this user" })
+      }
+    } catch (err) {
+      return reply.status(500).send({ success: false, message: "Error, please enter a valid ID and try again", data: err })
     }
   })
 
@@ -35,20 +54,20 @@ const userRouter = async (app: FastifyInstance, options: RouteShorthandOptions) 
     }
   })
 
-  app.patch('/', async (req, reply) => {
+  app.patch<{ Params: IUsersParams }>('/:id', async (req, reply) => {
     try {
+      const { id } = req.params
       const updatedUserSchema = z.object({
         name: z.string().optional(),
         email: z.string().email().optional(),
         password: z.string().optional(),
-        id: z.number()
       })
 
-      const { name, email, password, id } = updatedUserSchema.parse(req.body)
+      const { name, email, password } = updatedUserSchema.parse(req.body)
 
       const user = await prisma.user.update({
         where: {
-          id: id
+          id: Number(id)
         },
         data: {
           name,
@@ -63,16 +82,12 @@ const userRouter = async (app: FastifyInstance, options: RouteShorthandOptions) 
     }
   })
 
-  app.delete('/', async (req, reply) => {
+  app.delete<{ Params: IUsersParams }>('/:id', async (req, reply) => {
     try {
-      const atDeleteUserSchema = z.object({
-        id: z.number()
-      })
-
-      const { id } = atDeleteUserSchema.parse(req.body)
+      const { id } = req.params
 
       const deletedUser = await prisma.user.delete({
-        where: { id }
+        where: { id: Number(id) }
       })
 
       return reply.status(200).send({ success: true, message: "User deleted successfully", data: deletedUser })
@@ -82,4 +97,4 @@ const userRouter = async (app: FastifyInstance, options: RouteShorthandOptions) 
   })
 };
 
-export default userRouter;
+export default usersRouter;
