@@ -10,8 +10,8 @@ const usersRouter = async (app: FastifyInstance, options: RouteShorthandOptions)
   app.post('/signup', userController.signUp)
   app.post('/signin', userController.signIn)
 
-  app.patch('/:id', userController.update)
-  app.delete('/:id', userController.delete)
+  app.patch('/:id', { preHandler: userController.verifyToken }, userController.update)
+  app.delete('/:id', { preHandler: userController.verifyToken }, userController.delete)
 };
 
 export default usersRouter;

@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
@@ -97,10 +97,11 @@ export class UserController {
         if (compareHash) {
           const secret = process.env.SECRET
 
-          const token = jwt.sign({ id: user.id }, `${secret}`)
+          const token = jwt.sign({ id: user.id }, `${secret}`, { expiresIn: 60 * 60 })
 
           return reply.status(200).send({
             success: true, message: 'Login successful', token, data: {
+              id: user.id,
               name: user.name,
               email: user.email
             }
@@ -133,6 +134,11 @@ export class UserController {
           name,
           email,
           password
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true
         }
       })
 
@@ -147,12 +153,33 @@ export class UserController {
       const { id } = req.params
 
       const deletedUser = await prisma.user.delete({
-        where: { id: Number(id) }
+        where: { id: Number(id) },
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
       })
 
       return reply.status(200).send({ success: true, message: 'User deleted successfully', data: deletedUser })
     } catch (err) {
       return reply.status(500).send({ success: false, message: 'Error on delete user', data: err })
+    }
+  }
+
+  async verifyToken(req: FastifyRequest<{ Params: unknown }>, reply: FastifyReply, done: HookHandlerDoneFunction) {
+    try {
+      const token = req.headers['authorization']
+      const secret = process.env.SECRET
+
+      if (!token) {
+        return done(new Error('You need to provide a token'));
+      }
+
+      jwt.verify(token, secret as string)
+      done()
+    } catch (err) {
+      return done(new Error(err as string));
     }
   }
 }
