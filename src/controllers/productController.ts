@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { FastifyReply, FastifyRequest } from "fastify";
-import { z } from "zod";
+import { PrismaClient } from '@prisma/client';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { z } from 'zod';
 
 const prisma = new PrismaClient()
 
@@ -11,7 +11,7 @@ export class ProductController {
 
       return { products }
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on get products list", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on get products list', data: err })
     }
   }
 
@@ -22,12 +22,12 @@ export class ProductController {
       const product = await prisma.product.findFirst({ where: { id: Number(id) } })
 
       if (product) {
-        return reply.status(200).send({ success: true, message: "Product Found", data: product })
+        return reply.status(200).send({ success: true, message: 'Product Found', data: product })
       }
 
-      return reply.status(404).send({ success: false, message: "Error on find this product" })
+      return reply.status(404).send({ success: false, message: 'Error on find this product' })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error, please enter a valid ID and try again", data: err })
+      return reply.status(500).send({ success: false, message: 'Error, please enter a valid ID and try again', data: err })
     }
   }
 
@@ -51,9 +51,9 @@ export class ProductController {
         }
       })
 
-      return reply.status(201).send({ success: true, message: "Successfully created" })
+      return reply.status(201).send({ success: true, message: 'Successfully created' })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on create a new product", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on create a new product', data: err })
     }
   }
 
@@ -77,9 +77,9 @@ export class ProductController {
         }
       })
 
-      return reply.status(200).send({ success: true, message: "Product updated successfully", data: product })
+      return reply.status(200).send({ success: true, message: 'Product updated successfully', data: product })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error updating product", data: err })
+      return reply.status(500).send({ success: false, message: 'Error updating product', data: err })
     }
   }
 
@@ -89,9 +89,9 @@ export class ProductController {
 
       const product = await prisma.product.delete({ where: { id: Number(id) } })
 
-      return reply.status(200).send({ success: true, message: "Product deleted successfully", data: product })
+      return reply.status(200).send({ success: true, message: 'Product deleted successfully', data: product })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on delete product", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on delete product', data: err })
     }
   }
 }

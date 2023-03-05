@@ -1,19 +1,25 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcrypt";
-import { FastifyReply, FastifyRequest } from "fastify";
-import jwt from "jsonwebtoken";
-import { z } from "zod";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import jwt from 'jsonwebtoken';
+import { z } from 'zod';
 
 const prisma = new PrismaClient()
 
 export class UserController {
   async listAll(req: FastifyRequest, reply: FastifyReply) {
     try {
-      const users = await prisma.user.findMany()
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      })
 
       return { users }
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on get users list", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on get users list', data: err })
     }
   }
 
@@ -23,15 +29,20 @@ export class UserController {
 
       const searchUser = await prisma.user.findFirst({
         where: { id: Number(id) },
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
       })
 
       if (searchUser) {
-        return reply.status(200).send({ success: true, message: "User Found", data: searchUser })
+        return reply.status(200).send({ success: true, message: 'User Found', data: searchUser })
       }
 
-      return reply.status(404).send({ success: false, message: "Error on find this user" })
+      return reply.status(404).send({ success: false, message: 'Error on find this user' })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error, please enter a valid ID and try again", data: err })
+      return reply.status(500).send({ success: false, message: 'Error, please enter a valid ID and try again', data: err })
     }
   }
 
@@ -60,12 +71,12 @@ export class UserController {
           data: newUser
         })
 
-        return reply.status(201).send({ success: true, message: "Successfully created" })
+        return reply.status(201).send({ success: true, message: 'Successfully created' })
       }
 
-      return reply.status(500).send({ success: false, message: "Email in use" })
+      return reply.status(500).send({ success: false, message: 'Email in use' })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on create a new user", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on create a new user', data: err })
     }
   }
 
@@ -89,7 +100,7 @@ export class UserController {
           const token = jwt.sign({ id: user.id }, `${secret}`)
 
           return reply.status(200).send({
-            success: true, message: "Login successful", token, data: {
+            success: true, message: 'Login successful', token, data: {
               name: user.name,
               email: user.email
             }
@@ -97,9 +108,9 @@ export class UserController {
         }
       }
 
-      return reply.status(500).send({ success: false, message: "Login failed" })
+      return reply.status(500).send({ success: false, message: 'Login failed' })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Server error", data: err })
+      return reply.status(500).send({ success: false, message: 'Server error', data: err })
     }
   }
 
@@ -125,9 +136,9 @@ export class UserController {
         }
       })
 
-      return reply.status(200).send({ success: true, message: "User updated successfully", data: user })
+      return reply.status(200).send({ success: true, message: 'User updated successfully', data: user })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error updating user", data: err })
+      return reply.status(500).send({ success: false, message: 'Error updating user', data: err })
     }
   }
 
@@ -139,9 +150,9 @@ export class UserController {
         where: { id: Number(id) }
       })
 
-      return reply.status(200).send({ success: true, message: "User deleted successfully", data: deletedUser })
+      return reply.status(200).send({ success: true, message: 'User deleted successfully', data: deletedUser })
     } catch (err) {
-      return reply.status(500).send({ success: false, message: "Error on delete user", data: err })
+      return reply.status(500).send({ success: false, message: 'Error on delete user', data: err })
     }
   }
 }

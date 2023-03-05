@@ -1,6 +1,6 @@
-import fastify, { FastifyInstance } from "fastify";
-import productsRouter from "./routes/productsRouter";
-import usersRouter from "./routes/userRouter";
+import fastify, { FastifyInstance } from 'fastify';
+import productsRouter from './routes/productsRouter';
+import usersRouter from './routes/userRouter';
 
 const app: FastifyInstance = fastify()
 
