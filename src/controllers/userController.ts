@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 import { FastifyReply, FastifyRequest } from "fastify";
+import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 const prisma = new PrismaClient()
@@ -33,7 +35,7 @@ export class UserController {
     }
   }
 
-  async create(req: FastifyRequest, reply: FastifyReply) {
+  async signUp(req: FastifyRequest, reply: FastifyReply) {
     try {
       const createUserSchema = z.object({
         name: z.string(),
@@ -43,13 +45,61 @@ export class UserController {
 
       const { name, email, password } = createUserSchema.parse(req.body)
 
-      await prisma.user.create({
-        data: { name, email, password }
-      })
+      const verifyUser = await prisma.user.findFirst({ where: { email } })
 
-      return reply.status(201).send({ success: true, message: "Successfully created" })
+      if (!verifyUser) {
+        const hash = bcrypt.hashSync(password, 10)
+
+        const newUser = {
+          name,
+          email,
+          password: hash
+        }
+
+        await prisma.user.create({
+          data: newUser
+        })
+
+        return reply.status(201).send({ success: true, message: "Successfully created" })
+      }
+
+      return reply.status(500).send({ success: false, message: "Email in use" })
     } catch (err) {
       return reply.status(500).send({ success: false, message: "Error on create a new user", data: err })
+    }
+  }
+
+  async signIn(req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const signInUserSchema = z.object({
+        email: z.string().email(),
+        password: z.string()
+      })
+
+      const { email, password } = signInUserSchema.parse(req.body)
+
+      const user = await prisma.user.findFirst({ where: { email } })
+
+      if (user) {
+        const compareHash = bcrypt.compareSync(password, user.password)
+
+        if (compareHash) {
+          const secret = process.env.SECRET
+
+          const token = jwt.sign({ id: user.id }, `${secret}`)
+
+          return reply.status(200).send({
+            success: true, message: "Login successful", token, data: {
+              name: user.name,
+              email: user.email
+            }
+          })
+        }
+      }
+
+      return reply.status(500).send({ success: false, message: "Login failed" })
+    } catch (err) {
+      return reply.status(500).send({ success: false, message: "Server error", data: err })
     }
   }
 
