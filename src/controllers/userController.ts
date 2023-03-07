@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
@@ -167,7 +167,7 @@ export class UserController {
     }
   }
 
-  async verifyToken(req: FastifyRequest<{ Params: unknown }>, reply: FastifyReply, done: HookHandlerDoneFunction) {
+  async verifyToken(req: FastifyRequest<{ Params: unknown }>, reply: FastifyReply, done: any) {
     try {
       const token = req.headers['authorization']
       const secret = process.env.SECRET
@@ -177,7 +177,7 @@ export class UserController {
       }
 
       jwt.verify(token, secret as string)
-      done()
+      return done()
     } catch (err) {
       return done(new Error(err as string));
     }
